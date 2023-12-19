@@ -307,7 +307,7 @@ class OpenAIEvaluator(BaseLlmEvaluator):
     ):
         if model not in self.ALLOWED_MODEL_NAMES:
             raise ValueError(
-                f"Unsupported model {model} provided. Only gpt-4, gpt-4-32k and gpt-3.5-turbo-16k are supported."
+                f"Unsupported model {model} provided. Only helpnow-gpt-4-turbo-1106, helpnow-gpt-35-turbo-0613"#gpt-4, gpt-4-32k and gpt-3.5-turbo-16k are supported."
             )
         self._openai_retry_timeout = openai_retry_timeout
         super().__init__(
