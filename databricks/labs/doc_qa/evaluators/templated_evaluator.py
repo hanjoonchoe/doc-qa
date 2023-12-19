@@ -291,7 +291,7 @@ class BaseLlmEvaluator:
 
 
 class OpenAIEvaluator(BaseLlmEvaluator):
-    ALLOWED_MODEL_NAMES = ["gpt-4", "gpt-3.5-turbo-16k", "gpt-4-32k"]
+    ALLOWED_MODEL_NAMES = ["gpt-4", "gpt-3.5-turbo-16k", "gpt-4-32k",'helpnow-gpt-4-turbo-1106',"helpnow-gpt-35-turbo-0613"]
 
     # Override the constructor to only allow models from gpt-4, gpt-4-32k and gpt-3.5-turbo-16k 
     def __init__(

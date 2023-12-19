@@ -14,14 +14,15 @@ from databricks.labs.doc_qa.logging_utils import logger
 
 
 openai_token = os.getenv("OPENAI_API_KEY")
-
+api_url = os.getenv("OPENAI_API_BASE")
+api_version = os.getenv("OPENAI_API_VERSION")
 
 class StatusCode429Error(Exception):
     pass
 
 
 def request_openai(
-    messages, functions=[], temperature=0.0, model="gpt-4", retry_timeout=None
+    messages, functions=[], temperature=0.0, model='gpt-4', retry_timeout=None
 ):
     if retry_timeout is None:
         retry_timeout = 300
@@ -42,10 +43,10 @@ def request_openai(
             f"Calling open-ai API with {len(messages)} messages and {len(functions)} functions and model {model}"
         )
 
-        url = "https://api.openai.com/v1/chat/completions"
+        url = f"{api_url}/{model}/chat/completions?api-version={api_version}"
         headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {openai_token}",
+            "api-key": openai_token,
         }
         data = {
             "model": model,
@@ -56,6 +57,7 @@ def request_openai(
         if len(functions) > 0:
             data["functions"] = functions
         logger.debug(f"Calling open-ai API with data: {data}")
+
         response = requests.post(
             url, headers=headers, data=json.dumps(data), timeout=60
         )

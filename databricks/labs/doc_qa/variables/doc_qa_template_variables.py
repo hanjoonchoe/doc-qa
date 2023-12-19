@@ -1,5 +1,5 @@
 from databricks.labs.doc_qa.llm_utils import PromptTemplate
-
+from typing import Union
 
 grading_system_prompt_intro = """ Please act as an impartial judge and evaluate the quality of the provided answer which attempts to answer the provided question based on a provided context."""
 
@@ -325,8 +325,22 @@ grading_instruction_scale_1_no_example = """
 
 """
 
+grading_instruction__scale_1_no_example_kr = """
+채점 기준 정의:
 
-def get_openai_grading_template_and_function(scale: int, level_of_details: int):
+- Correctness: question에 대해 context의 내용을 참조하여 answer가 정확한 정보를 담고 있는지에 대한 평가입니다.. 아래는 채점 기준의 상세입니다.
+    - Score 0 : question에 대해 context를 참조하여 부정확한 정보를 담고 있는 경우.
+    - Score 1 : question에 대해 context를 참조하여 정확한 정보를 담고 있는 경우.
+- Comprehensiveness: answer가 question에서 묻는 질문 모두에 대해서 context를 참조하여 충분히 답변하고 있는지에 대한 평가 입니다. 아래는 채점 기준의 상세입니다.
+    - Score 0 : answer는 context가 요구하는 내용을 불완전하게 다루고 있는 경우
+    - Score 1 : answer는 context가 요구하는 내용을 완전하게 다루고 있는 경우.
+- Readability: answer가 question에서 묻는 질문에 대해서 이해하기 쉽고 간결하게 작성되었는지 있는지에 대한 평가 입니다. 아래는 채점 기준의 상세입니다.
+    - Score 0 : answer가 이해하기 쉽고 간결하며 완전하게 작성되지 않은 경우
+    - Score 1 : answer가 이해하기 쉽고 간결하며 완전하게 작성된 경우.
+"""
+
+
+def get_openai_grading_template_and_function(lang: Union[str,None], scale: int, level_of_details: int):
     """
     scale has these possible values: 1, 3, 4, 10
     level_of_details has these possible values: 0, 1, 2
@@ -334,53 +348,67 @@ def get_openai_grading_template_and_function(scale: int, level_of_details: int):
     - 1 means no example, but has detail
     - 2 means has example, has detail
     """
-    if level_of_details == 0:
-        # No detail, no example
-        grading_instruction = grading_instruction_no_detail
-    elif level_of_details == 1:
-        # No detail, has example
-        if scale == 1:
-            # 0~1:
-            grading_instruction = grading_instruction_scale_1_no_example
-        elif scale == 3:
-            # 0~3:
-            grading_instruction = grading_instruction_scale_3_no_example
-        elif scale == 4:
-            # 0~4:
-            grading_instruction = grading_instruction_scale_4_no_example
-        elif scale == 10:
-            # 0~10:
+    if lang == "kr":
+        if level_of_details == 0:
+            raise ValueError(f"level_of_details {level_of_details} is not supported in korean")
+        elif level_of_details == 1:
+            if scale == 1:
+                grading_instruction = grading_instruction__scale_1_no_example_kr
+            else:
+                raise ValueError(f"scale {scale} is not supported in korean")
+    else:
+        if level_of_details == 0:
+            # No detail, no example
             grading_instruction = grading_instruction_no_detail
+        elif level_of_details == 1:
+            # No detail, has example
+            if scale == 1:
+                # 0~1:
+                grading_instruction = grading_instruction_scale_1_no_example
+            elif scale == 3:
+                # 0~3:
+                grading_instruction = grading_instruction_scale_3_no_example
+            elif scale == 4:
+                # 0~4:
+                grading_instruction = grading_instruction_scale_4_no_example
+            elif scale == 10:
+                # 0~10:
+                grading_instruction = grading_instruction_no_detail
+            else:
+                raise ValueError(f"scale {scale} is not supported")
+        elif level_of_details == 2:
+            if scale == 1:
+                # 0~1:
+                grading_instruction = grading_instruction_scale_1
+            elif scale == 3:
+                # 0~3:
+                grading_instruction = grading_instruction_scale_3
+            elif scale == 4:
+                # 0~4:
+                grading_instruction = grading_instruction_scale_4
+            elif scale == 10:
+                # 0~10:
+                grading_instruction = grading_instruction_scale_10
+            else:
+                raise ValueError(f"scale {scale} is not supported")
         else:
-            raise ValueError(f"scale {scale} is not supported")
-    elif level_of_details == 2:
-        if scale == 1:
-            # 0~1:
-            grading_instruction = grading_instruction_scale_1
-        elif scale == 3:
-            # 0~3:
-            grading_instruction = grading_instruction_scale_3
-        elif scale == 4:
-            # 0~4:
-            grading_instruction = grading_instruction_scale_4
-        elif scale == 10:
-            # 0~10:
-            grading_instruction = grading_instruction_scale_10
-        else:
-            raise ValueError(f"scale {scale} is not supported")
-    else:
-        raise ValueError(f"level_of_details {level_of_details} is not supported")
+            raise ValueError(f"level_of_details {level_of_details} is not supported")
 
-    if scale == 1:
-        openai_grading_function = openai_evaluator_function_scale_1
-    elif scale == 3:
-        openai_grading_function = openai_evaluator_function_scale_3
-    elif scale == 4:
-        openai_grading_function = openai_evaluator_function_scale_4
-    elif scale == 10:
-        openai_grading_function = openai_evaluator_function_scale_10
+
+    if lang == "kr":
+        if scale == 1:
+            openai_grading_function = openai_evaluator_function_scale_1_kr
     else:
-        raise ValueError(f"scale {scale} is not supported")
+        if scale == 1:
+            openai_grading_function = openai_evaluator_function_scale_1
+        elif scale == 3:
+            openai_grading_function = openai_evaluator_function_scale_3
+        elif scale == 4:
+            openai_grading_function = openai_evaluator_function_scale_4
+        elif scale == 10:
+            openai_grading_function = openai_evaluator_function_scale_10
+        else:
+            raise ValueError(f"scale {scale} is not supported")
     prompt_template = PromptTemplate(
         """ {grading_system_prompt_intro}
 
@@ -558,6 +586,48 @@ openai_evaluator_function_scale_1 = {
             "reasoning_for_readability": {
                 "type": "string",
                 "description": "Your reasoning for giving the grading for the readability of the answer. Provide 5 to 30 words explanation.",
+            },
+            "readability": {
+                "type": "integer",
+                "description": "Your integer grading between 0 or 1 for the readability of the answer.",
+            },
+        },
+        "required": [
+            "reasoning_for_correctness",
+            "correctness",
+            "reasoning_for_comprehensiveness",
+            "comprehensiveness",
+            "reasoning_for_readability",
+            "readability",
+        ],
+    },
+}
+
+openai_evaluator_function_scale_1_kr = {
+    "name": "grading_function",
+    "description": "Call this function to submit the grading for the answer",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "reasoning_for_correctness": {
+                "type": "string",
+                "description": "Your reasoning for giving the grading for the correctness of the answer. Provide 5 to 30 words explanation in korean.",
+            },
+            "correctness": {
+                "type": "integer",
+                "description": "Your integer grading between 0 or 1 for the correctness of the answer.",
+            },
+            "reasoning_for_comprehensiveness": {
+                "type": "string",
+                "description": "Your reasoning for giving the grading for the comprehensiveness of the answer. Provide 5 to 30 words explanation in korean.",
+            },
+            "comprehensiveness": {
+                "type": "integer",
+                "description": "Your integer grading between 0 or 1 for the comprehensiveness of the answer.",
+            },
+            "reasoning_for_readability": {
+                "type": "string",
+                "description": "Your reasoning for giving the grading for the readability of the answer. Provide 5 to 30 words explanation in korean.",
             },
             "readability": {
                 "type": "integer",
