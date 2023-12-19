@@ -31,5 +31,6 @@ setup(
         'sentence-transformers==2.2.2',
         'chroma==0.2.0',
         'chromadb==0.4.18',
+        'httpx'
     ],
 )
